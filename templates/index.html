@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Features Visualization for Emotion Classification</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/lib/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/static/css/dashboard.css" rel="stylesheet">
+  </head>
+  <body>
+  <!--<div class="text-center">
+  <div class="spinner-border" role="status">
+    <span class="sr-only">Loading...</span>
+  </div>
+  -->
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <nav id="sidebarMenu" class="col-md-2 col-lg-2 d-md-block bg-light sidebar sidebarLeft collapse">
+        <div class="sidebar-sticky pt-3">
+          <form id="inputParams" onsubmit="return false;">
+            <div class="form-group">
+              <label for="dataset">Dataset</label>
+              <select id="dataset" class="form-select form-select-sm" required>
+                <option value="">None</option>
+                <option value="deap">DEAP</option>
+                <!--<option value="wesad">WESAD</option>-->
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="fselector">Dimensionality Reduction</label>
+              <select id="fselector" class="form-select form-select-sm">
+                <option value="">None</option>
+                <option value="pca">PCA</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="mode">Classification by</label>
+              <select id="mode" class="form-select form-select-sm" required>
+                <!--<option value="AVs">A-V scale (1 to 9)</option>
+                <option value="AVl">A-V levels</option>
+                <option value="emo">Discrete emotions</option>-->
+                <option value="AV_4">A-V levels (4 quad.)</option>
+                <option value="AV_9">A-V levels (9 quad.)</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="classifier">Classifier</label>
+                <select id="classifier" class="form-select form-select-sm" required>
+                  <option value="">None</option>
+                  <option value="svm">SVM</option>
+                  <option value="knn">kNN</option>
+                </select>
+              </div>
+              <div class="form-group col-md-6">
+                <label for="winSize">Window size (secs)</label>
+                <input type="text" class="form-control form-control-sm" id="winSize" style="text-align:center;" value="60" required>
+                <input type="hidden" class="form-control form-control-sm" id="winIni" value="0">
+                <input type="hidden" class="form-control form-control-sm" id="sampleSize" value="128">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="channels">Signals</label>
+              <select multiple id="channels" style="min-height: 120px;" class="form-control form-control-sm" required>
+              </select>
+            </div>
+            <br>
+            <input id="btnExec" class="btn btn-primary btn-sm" type="submit" value="Process">
+          </form>
+
+          <div id="conf_matrix" style="display: none; width: 100%; height:300px; margin-top: 10px;"></div>
+        </div>
+      </nav>
+
+      <main role="main" class="col-md-8 ml-sm-auto col-lg-8 px-md-4" style="height:100%; margin-right: auto; margin-left: auto;">
+        <div class="row" style="height:50%; width:100%;">
+          <h4 class="section">Classification</h4>
+          <div id="circumplex" style="height:50%; width:100%; text-align:center;"></div>
+        </div>
+        <div class="row" style="height: 50%; width: 100%;">
+          <h4 class="section">Feature Contribution</h4>
+          <div id="heatmap" style="width:100%; height:95%; overflow-y: auto;"></div>
+        </div>
+      </main>
+
+      <nav id="sidebarMenu2" class="col-md-2 col-lg-2 d-md-block bg-light sidebar sidebarRight collapse">
+        <div class="sidebar-sticky pt-3">
+          <label><b>Classification: performance</b></label>
+          <table class="table" style="font-size: 8.5px;">
+            <thead>
+              <tr>
+                <th scope="col">&nbsp;</th>
+                <th scope="col">Prec.</th>
+                <th scope="col">Recall</th>
+                <th scope="col">F1-score</th>
+                <th scope="col">Accur.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Arousal</th>
+                <td id="aro_prec">-</td>
+                <td id="aro_rec">-</td>
+                <td id="aro_f1">-</td>
+                <td id="aro_acc">-</td>
+              </tr>
+              <tr>
+                <th scope="row">Valence</th>
+                <td id="val_prec">-</td>
+                <td id="val_rec">-</td>
+                <td id="val_f1">-</td>
+                <td id="val_acc">-</td>
+              </tr>
+              <tr>
+                <th scope="row">Quadrant</th>
+                <td id="quad_prec">-</td>
+                <td id="quad_rec">-</td>
+                <td id="quad_f1">-</td>
+                <td id="quad_acc">-</td>
+              </tr>
+              <tr>
+                <th scope="row">Time (secs)</th>
+                <td colspan="4" id="time_exec">-</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <label><b>Feature Selection</b></label>
+          <div class="form-group" style="height: 50%;">
+              <label for="listFeatures">List of features</label>
+              <select multiple id="listFeatures" style="min-height:120px; height:90%;" class="form-control form-control-sm" required>
+              </select>
+          </div>
+          <input id="btnRetrain" class="btn btn-secondary btn-sm" type="submit" value="Train classifier" disabled>
+        </div>
+      </nav>
+
+    </div>
+  </div>
+
+  <!-- Load libs JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="/static/lib/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5.13.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@4.14.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.10.0"></script>
+
+  <!-- Custom files -->
+  <script src="/static/js/classes/FeatureManager.js"></script>
+  <script src="/static/js/classes/SignalManager.js"></script>
+  <script src="/static/js/classes/CircumplexManager.js"></script>
+  <script src="/static/js/processController.js"></script>
+  <script src="/static/js/dashboard.js"></script>
+  </body>
+</html>
